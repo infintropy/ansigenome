@@ -6,21 +6,19 @@ import json
 import os
 import re
 import subprocess
-import urllib.request, urllib.error, urllib.parse
+import urllib2
 import yaml
 #  import collections
 
 from jinja2 import DictLoader
 from jinja2.environment import Environment
 
-from . import constants as c
-from . import ui as ui
+import constants as c
+import ui as ui
 
 import sys
-import importlib
-importlib.reload(sys)
-#sys.setdefaultencoding('utf-8')
-
+reload(sys)
+sys.setdefaultencoding('utf-8')
 
 
 class RelEnvironment(Environment):
@@ -96,8 +94,8 @@ def url_to_string(url):
     Return the contents of a web site url as a string.
     """
     try:
-        page = urllib.request.urlopen(url)
-    except (urllib.error.HTTPError, urllib.error.URLError) as err:
+        page = urllib2.urlopen(url)
+    except (urllib2.HTTPError, urllib2.URLError) as err:
         ui.error(c.MESSAGES["url_unreachable"], err)
         sys.exit(1)
 
@@ -136,7 +134,7 @@ def template(path, extend_path, out):
         # DEPRECATION WARNING: This is only used for backwards compatibility,
         #                      please use the unique filter instead.
         def unique_dict(items, key):
-            return list({v[key]: v for v in items}.values())
+            return {v[key]: v for v in items}.values()
 
         env.filters["unique_dict"] = unique_dict
 
@@ -196,7 +194,7 @@ def exit_if_path_not_found(path):
 
 
 def ask(question, default):
-    result = input("{0} [{1}]: ".format(question, default))
+    result = raw_input("{0} [{1}]: ".format(question, default))
 
     if not result:
         result = default
@@ -261,7 +259,7 @@ def keys_in_dict(d, parent_key, keys):
     """
     Create a list of keys from a dict recursively.
     """
-    for key, value in d.items():
+    for key, value in d.iteritems():
         if isinstance(value, dict):
             keys_in_dict(value, key, keys)
         else:
@@ -319,7 +317,7 @@ def roles_dict(path, repo_prefix="", repo_sub_dir=""):
 
     aggregated_roles = {}
 
-    roles = os.walk(path).__next__()[1]
+    roles = os.walk(path).next()[1]
 
     # First scan all directories
     for role in roles:
@@ -330,7 +328,7 @@ def roles_dict(path, repo_prefix="", repo_sub_dir=""):
     # Then format them
     for role in roles:
         if is_role(os.path.join(path, role)):
-            if isinstance(role, str):
+            if isinstance(role, basestring):
                 role_repo = "{0}{1}".format(repo_prefix, role_name(role))
 
                 aggregated_roles[role] = role_repo

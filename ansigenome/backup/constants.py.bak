@@ -1,7 +1,7 @@
 import pkg_resources
 import os.path
 
-from . import utils
+import utils
 
 
 GIT_AUTHOR = utils.capture_shell("git config user.name")[0][:-1]

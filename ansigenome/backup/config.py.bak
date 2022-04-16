@@ -1,7 +1,7 @@
 import os
 
-from . import constants as c
-from . import utils as utils
+import constants as c
+import utils as utils
 
 
 class Config(object):
@@ -32,7 +32,7 @@ class Config(object):
         """
         Show a help sentence for new users who have no config.
         """
-        print("""
+        print """
     Welcome to ansigenome, you are seeing this message because there
     were no available config files to load.
 
@@ -40,7 +40,7 @@ class Config(object):
     only need to do this once. You can also exit with CTRL+D.
 
     This config file will be placed in $HOME/.ansigenome.conf for now.
-              """)
+              """
 
     def ask_questions(self):
         """
@@ -50,14 +50,14 @@ class Config(object):
 
         for key in c.CONFIG_QUESTIONS:
             section = key[1]
-            print()
+            print
             for question in section:
                 answer = utils.ask(question[1], question[2])
                 out_config["{0}_{1}".format(key[0], question[0])] = answer
 
         for key in c.CONFIG_MULTIPLE_CHOICE_QUESTIONS:
             section = key[1]
-            print()
+            print
             # keep going until we get what we want
             while True:
                 input = utils.ask(section[1], "")
@@ -67,7 +67,7 @@ class Config(object):
                     answer = input
 
                     break
-                print()
+                print
 
             # store the answer as 1 less than it is, we're dealing with
             # a list to select the number which is 0 indexed
@@ -78,6 +78,6 @@ class Config(object):
                 out_config["license_url"] = c.LICENSE_TYPES[answer][1]
 
         # merge in defaults without asking questions
-        merged_config = dict(list(c.CONFIG_DEFAULTS.items()) + list(out_config.items()))
+        merged_config = dict(c.CONFIG_DEFAULTS.items() + out_config.items())
 
         return merged_config

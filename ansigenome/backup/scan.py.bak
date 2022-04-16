@@ -2,9 +2,9 @@ import re
 import os
 import sys
 
-from . import constants as c
-from . import ui as ui
-from . import utils as utils
+import constants as c
+import ui as ui
+import utils as utils
 
 from ansigenome.export import Export
 
@@ -31,7 +31,7 @@ class Scan(object):
         if self.options.limit:
             self.limit_roles()
 
-        utils.exit_if_no_roles(len(list(self.roles.keys())), self.roles_path)
+        utils.exit_if_no_roles(len(self.roles.keys()), self.roles_path)
 
         self.regex_facts = re.compile(r"set_fact:\w+")
         self.paths = {}
@@ -92,7 +92,7 @@ class Scan(object):
         new_roles = {}
         roles = self.options.limit.split(",")
 
-        for key, value in self.roles.items():
+        for key, value in self.roles.iteritems():
             for role in roles:
                 role = role.strip()
                 if key == role:
@@ -104,7 +104,7 @@ class Scan(object):
         """
         Iterate over each role and report its stats.
         """
-        for key, value in sorted(self.roles.items()):
+        for key, value in sorted(self.roles.iteritems()):
             self.paths["role"] = os.path.join(self.roles_path, key)
             self.paths["meta"] = os.path.join(self.paths["role"], "meta",
                                               "main.yml")
@@ -144,7 +144,7 @@ class Scan(object):
             return
 
         ui.totals(self.report["totals"],
-                  len(list(self.report["roles"].keys())),
+                  len(self.report["roles"].keys()),
                   self.report["stats"]["longest_role_name_length"])
 
         if self.gendoc:
@@ -245,7 +245,7 @@ class Scan(object):
             self.defaults = ""
             return 0
 
-        file = open(self.paths["defaults"], "r").encoding("utf-8")
+        file = open(self.paths["defaults"], "r")
         for line in file:
             if len(line) > 0:
                 first_char = line[0]

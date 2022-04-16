@@ -160,19 +160,19 @@ def print_out(title, out):
     """
     Print the output with borders.
     """
-    print()
-    print("".join("=" * 79))
-    print(title)
-    print("".join("=" * 79))
-    print(out)
-    print("".join("=" * 79))
+    print
+    print "".join("=" * 79)
+    print title
+    print "".join("=" * 79)
+    print out
+    print "".join("=" * 79)
 
 
 def populate_dict_with_files(test_path, roles, the_dict, path, tag=""):
     """
     Populate the dict to store the contents of each role's file.
     """
-    print()
+    print
     for role in roles:
         role_path = os.path.join(test_path, role)
 
@@ -186,13 +186,13 @@ def run_diff_on(the_dict, file, tag=""):
     """
     diff = []
 
-    for key, values in the_dict.items():
+    for key, values in the_dict.iteritems():
         if tag not in key:
             diff = list(difflib.context_diff(the_dict[key],
                         the_dict[key + tag]))
-            print("DIFF for {0}'s {1}:".format(key, file))
+            print "DIFF for {0}'s {1}:".format(key, file)
             if len(diff) > 0:
                 pprint(diff)
             else:
-                print("[no differences]")
-            print()
+                print "[no differences]"
+            print
