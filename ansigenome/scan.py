@@ -245,7 +245,7 @@ class Scan(object):
             self.defaults = ""
             return 0
 
-        file = open(self.paths["defaults"], "r").encoding("utf-8")
+        file = open(self.paths["defaults"], "r", encoding="utf-8")
         for line in file:
             if len(line) > 0:
                 first_char = line[0]
