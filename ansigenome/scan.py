@@ -312,7 +312,7 @@ class Scan(object):
         for file in self.all_files:
             full_path = os.path.join(self.paths["role"], file)
 
-            with open(full_path, "r") as f:
+            with open(full_path, "r", encoding="utf8", errors='ignore') as f:
                 for line in f:
                     total_lines += 1
 
