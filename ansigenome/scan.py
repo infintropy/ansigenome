@@ -13,8 +13,8 @@ class Scan(object):
     """
     Loop over each role on the roles path and report back stats on them.
     """
-    def __init__(self, args, options, config,
-                 gendoc=False, genmeta=False, export=False):
+
+    def __init__(self, args, options, config, gendoc=False, genmeta=False, export=False):
         self.roles_path = args[0]
 
         self.options = options
@@ -24,8 +24,8 @@ class Scan(object):
         self.export = export
 
         # set the readme output format
-        self.readme_format = c.ALLOWED_GENDOC_FORMATS[0]
 
+        self.readme_format = self.config["default_format_gendoc"]
         self.roles = utils.roles_dict(self.roles_path, "")
 
         if self.options.limit:
@@ -45,8 +45,10 @@ class Scan(object):
         # only load and validate the readme when generating docs
         if self.gendoc:
             # only change the format if it is different than the default
-            if not self.options.format == self.readme_format:
-                self.readme_format = self.options.format
+            # but we'll only check if the configurable default isnt set
+            if not self.config["default_format_gendoc"]:
+                if not self.options.format == self.readme_format:
+                    self.readme_format = self.options.format
 
             extend_path = self.config["options_readme_template"]
 
@@ -55,8 +57,7 @@ class Scan(object):
             else:
                 readme_source = c.README_MD_TEMPLATE_PATH
 
-            self.readme_template = utils.template(readme_source, extend_path,
-                                                  self.readme_format)
+            self.readme_template = utils.template(readme_source, extend_path, self.readme_format)
 
         self.report = {
             "totals": {
@@ -77,7 +78,7 @@ class Scan(object):
             "roles": {},
             "stats": {
                 "longest_role_name_length": len(max(self.roles, key=len)),
-            }
+            },
         }
 
         self.scan_roles()
@@ -106,13 +107,9 @@ class Scan(object):
         """
         for key, value in sorted(self.roles.items()):
             self.paths["role"] = os.path.join(self.roles_path, key)
-            self.paths["meta"] = os.path.join(self.paths["role"], "meta",
-                                              "main.yml")
-            self.paths["readme"] = os.path.join(self.paths["role"],
-                                                "README.{0}"
-                                                .format(self.readme_format))
-            self.paths["defaults"] = os.path.join(self.paths["role"],
-                                                  "defaults", "main.yml")
+            self.paths["meta"] = os.path.join(self.paths["role"], "meta", "main.yml")
+            self.paths["readme"] = os.path.join(self.paths["role"], "README.{0}".format(self.readme_format))
+            self.paths["defaults"] = os.path.join(self.paths["role"], "defaults", "main.yml")
 
             self.report["roles"][key] = self.report_role(key)
 
@@ -133,9 +130,7 @@ class Scan(object):
                 self.update_scan_report(key)
 
             if not self.config["options_quiet"] and not self.export:
-                ui.role(key,
-                        self.report["roles"][key],
-                        self.report["stats"]["longest_role_name_length"])
+                ui.role(key, self.report["roles"][key], self.report["stats"]["longest_role_name_length"])
 
         self.tally_role_columns()
 
@@ -143,9 +138,7 @@ class Scan(object):
         if self.config["options_quiet"] or self.export:
             return
 
-        ui.totals(self.report["totals"],
-                  len(list(self.report["roles"].keys())),
-                  self.report["stats"]["longest_role_name_length"])
+        ui.totals(self.report["totals"], len(list(self.report["roles"].keys())), self.report["stats"]["longest_role_name_length"])
 
         if self.gendoc:
             ui.gen_totals(self.report["state"], "readme")
@@ -164,12 +157,10 @@ class Scan(object):
         for role in self.report["roles"]:
             del self.report["roles"][role]["state"]
 
-            defaults_path = os.path.join(self.roles_path, role,
-                                         "defaults", "main.yml")
+            defaults_path = os.path.join(self.roles_path, role, "defaults", "main.yml")
             if os.path.exists(defaults_path):
                 defaults = self.report["roles"][role]["defaults"]
-                self.report["roles"][role]["defaults"] = \
-                    utils.yaml_load("", defaults)
+                self.report["roles"][role]["defaults"] = utils.yaml_load("", defaults)
 
         Export(self.roles_path, self.report, self.config, self.options)
 
@@ -190,7 +181,7 @@ class Scan(object):
             "meta": self.gather_meta(),
             "readme": self.gather_readme(),
             "dependencies": self.dependencies,
-            "total_dependencies": len(self.dependencies)
+            "total_dependencies": len(self.dependencies),
         }
 
         return fields
@@ -254,11 +245,14 @@ class Scan(object):
 
             defaults_lines.append(line)
 
-            if (first_char != "#" and first_char != "-" and
-                    first_char != " " and
-                    first_char != "\r" and
-                    first_char != "\n" and
-                    first_char != "\t"):
+            if (
+                first_char != "#"
+                and first_char != "-"
+                and first_char != " "
+                and first_char != "\r"
+                and first_char != "\n"
+                and first_char != "\t"
+            ):
                 total_defaults += 1
         file.close()
 
@@ -286,8 +280,7 @@ class Scan(object):
         """
         facts = []
 
-        contents = utils.file_to_string(os.path.join(self.paths["role"],
-                                        file))
+        contents = utils.file_to_string(os.path.join(self.paths["role"], file))
         contents = re.sub(r"\s+", "", contents)
         matches = self.regex_facts.findall(contents)
 
@@ -312,7 +305,7 @@ class Scan(object):
         for file in self.all_files:
             full_path = os.path.join(self.paths["role"], file)
 
-            with open(full_path, "r", encoding="utf8", errors='ignore') as f:
+            with open(full_path, "r", encoding="utf8", errors="ignore") as f:
                 for line in f:
                     total_lines += 1
 
@@ -328,10 +321,8 @@ class Scan(object):
         totals = self.report["totals"]
         roles = self.report["roles"]
 
-        totals["dependencies"] = sum(roles[item]
-                                     ["total_dependencies"] for item in roles)
-        totals["defaults"] = sum(roles[item]
-                                 ["total_defaults"] for item in roles)
+        totals["dependencies"] = sum(roles[item]["total_dependencies"] for item in roles)
+        totals["defaults"] = sum(roles[item]["total_defaults"] for item in roles)
         totals["facts"] = sum(roles[item]["total_facts"] for item in roles)
         totals["files"] = sum(roles[item]["total_files"] for item in roles)
         totals["lines"] = sum(roles[item]["total_lines"] for item in roles)
@@ -471,8 +462,7 @@ ansigenome_info:
         if not os.path.exists(self.paths[file]):
             state["ok_role"] += 1
             self.report["roles"][role]["state"] = "ok"
-        elif (self.report["roles"][role][file] != original and
-                self.report["roles"][role]["state"] != "ok"):
+        elif self.report["roles"][role][file] != original and self.report["roles"][role]["state"] != "ok":
             state["changed_role"] += 1
             self.report["roles"][role]["state"] = "changed"
         elif self.report["roles"][role][file] == original:
@@ -527,10 +517,8 @@ ansigenome_info:
 
         normalized_role = {
             "name": role_name,
-            "galaxy_name": "{0}.{1}".format(self.config["scm_user"],
-                                            role_name),
-            "slug": "{0}{1}".format(self.config["scm_repo_prefix"],
-                                    role_name),
+            "galaxy_name": "{0}.{1}".format(self.config["scm_user"], role_name),
+            "slug": "{0}{1}".format(self.config["scm_repo_prefix"], role_name),
         }
 
         if "authors" in self.meta_dict["ansigenome_info"]:
@@ -539,9 +527,7 @@ ansigenome_info:
             authors = [author]
 
             if "github" in self.config["scm_host"]:
-                self.config["author_github"] = "{0}/{1}".format(
-                    self.config["scm_host"],
-                    self.config["scm_user"])
+                self.config["author_github"] = "{0}/{1}".format(self.config["scm_host"], self.config["scm_user"])
 
         self.readme_template_vars = {
             "authors": authors,
@@ -550,7 +536,7 @@ ansigenome_info:
             "license": license,
             "galaxy_info": self.meta_dict["galaxy_info"],
             "dependencies": self.meta_dict["dependencies"],
-            "ansigenome_info": self.meta_dict["ansigenome_info"]
+            "ansigenome_info": self.meta_dict["ansigenome_info"],
         }
 
         # add the defaults and facts
